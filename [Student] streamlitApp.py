@@ -20,17 +20,16 @@ def load_model():
     if os.path.exists(model_path):
         try:
             model = joblib.load(model_path)
-            # If it's a tuple of models, return it directly
             if isinstance(model, tuple):
                 return model
             else:
-                return (model,)  # Convert single model to tuple
+                return (model,)  # Wrap single model in a tuple
         except Exception as e:
             st.error(f"❌ Error loading model: {e}")
-            return None
+            return ()
     else:
         st.error("❌ Model file 'voting_model.pkl' not found in the directory.")
-        return None
+        return ()
 
 voting_models = load_model()
 
@@ -63,22 +62,23 @@ with st.sidebar:
     geolocation_state_seller = st.number_input("Geolocation State of the Seller", value=20)
     distance = st.number_input("Distance", value=475.35)
 
-    # Show image
-    st.header("Supply Chain Visualization")
-    image_path = "supply_chain_optimisation.jpg"
-    if os.path.exists(image_path):
-        img = Image.open(image_path)
-        st.image(img, caption="Supply Chain Optimization", use_column_width=True)
-    else:
-        uploaded_image = st.file_uploader("Upload an Image (JPG/PNG)", type=["jpg", "png"])
-        if uploaded_image:
-            img = Image.open(uploaded_image)
-            st.image(img, caption="Uploaded Image", use_column_width=True)
+# Main panel: Visualization
+st.header("Supply Chain Visualization")
+image_path = "supply_chain_optimisation.jpg"
+if os.path.exists(image_path):
+    img = Image.open(image_path)
+    st.image(img, caption="Supply Chain Optimization", use_column_width=True)
+else:
+    uploaded_image = st.file_uploader("Upload an Image (JPG/PNG)", type=["jpg", "png"])
+    if uploaded_image:
+        img = Image.open(uploaded_image)
+        st.image(img, caption="Uploaded Image", use_column_width=True)
 
 # Output prediction
 with st.container():
     st.header("Output: Wait Time in Days")
-    submit = st.button("Predict Wait Time")
+    submit = st.button("Predict Wait Time")  # ✅ define the button before use
+
     if submit:
         with st.spinner("Predicting..."):
             if voting_models:
@@ -88,6 +88,8 @@ with st.container():
                     geolocation_state_customer, geolocation_state_seller, distance)
                 if prediction is not None:
                     st.subheader(f"Estimated Delivery Time: **{prediction} days**")
+            else:
+                st.error("❌ No model available to make predictions.")
 
 # Sample dataset
 sample_data = {
